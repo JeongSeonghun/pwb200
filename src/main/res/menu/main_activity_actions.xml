@@ -1,0 +1,29 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:myapp="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/state"
+        android:title="DISCONNECT"
+        myapp:showAsAction="always"
+        android:uiOptions="splitActionBarWhenNarrow"
+        android:actionLayout="@layout/bt_state_layout">
+
+    </item>
+
+    <item
+        android:id="@+id/action_connect"
+        myapp:showAsAction="never"
+        android:uiOptions="splitActionBarWhenNarrow"
+        android:title="블루투스 연결">
+
+    </item>
+
+    <item
+        android:id="@+id/action_disconnect"
+        myapp:showAsAction="never"
+        android:uiOptions="splitActionBarWhenNarrow"
+        android:title="블루투스 해제">
+
+    </item>
+
+</menu>
