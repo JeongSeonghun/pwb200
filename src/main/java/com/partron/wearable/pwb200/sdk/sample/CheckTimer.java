@@ -27,9 +27,14 @@ public class CheckTimer {
 
     private SimpleDateFormat mFormat = new SimpleDateFormat("HH:mm:ss:SSS");
 
-    public interface TimerCallBack{
+    public interface TimerCallBack{     //종료후 저장
         ArrayList onCheck();
         void onComplete(ArrayList testArray);
+    }
+
+    private TimerCallBack2 timerCallBack2;
+    public interface TimerCallBack2{    //주기별 저장
+        void onCheck(boolean addSpaceChk);
     }
 
     public CheckTimer(ArrayList times, TimerCallBack timerCallBack){
@@ -49,12 +54,25 @@ public class CheckTimer {
         testArray= new ArrayList();
         timerMode=1;
     }
+    public CheckTimer(TimerCallBack timerCallBack){
+        this.timerCallBack= timerCallBack;
+        timerMode=3;
+    }
+    public CheckTimer(TimerCallBack2 timerCallBack2){
+        this.timerCallBack2= timerCallBack2;
+        timerMode=4;
+    }
+
+    boolean isAddSpace=false;
+    int taskNum=1;
 
     public void startTimer(){
         timer= new Timer();
         TimerTask timerTask;
+        TimerTask timerTask2;
+
         switch (timerMode){
-            case 1:
+            case 1: //개수 확인용
                 startTime= getCurrentTime();
                 Log.d("pwb test", "Timer Start : "+startTime);
                 timerTask= new TimerTask() {
@@ -66,7 +84,7 @@ public class CheckTimer {
 
                 timer.schedule(timerTask, repeat, repeat);
                 break;
-            case 2:
+            case 2: //일정 시간별 확인용
                 timerTask= new TimerTask() {
                     @Override
                     public void run() {
@@ -75,7 +93,7 @@ public class CheckTimer {
                     }
                 };
 
-                TimerTask timerTask2= new TimerTask() {
+                timerTask2= new TimerTask() {
                     @Override
                     public void run() {
                         Log.d("pwb test", "timer second");
@@ -96,11 +114,58 @@ public class CheckTimer {
                 timer3= new Timer();
                 timer.schedule(timerTask,60*1000);
                 timer2.schedule(timerTask2,10*60*1000);
-                timer3.schedule(timerTask3,60*60*1000);
+                timer3.schedule(timerTask3,3*60*60*1000);
+                break;
+            case 3: //일정 주기별 확인
+                timerTask= new TimerTask() {
+                    @Override
+                    public void run() {
+                        Log.d("pwb test", "timer first");
+                        timerCallBack.onCheck();
+                    }
+                };
+
+                timerTask2= new TimerTask() {
+                    @Override
+                    public void run() {
+                        Log.d("pwb test", "timer second");
+                        timerCallBack.onCheck();
+
+                    }
+                };
+
+                timer.schedule(timerTask, 10*60*1000);
+                timer.schedule(timerTask2, 20*60*1000, 20*60*1000);
+                //timer.schedule(timerTask2, 1000, 1000);
+                break;
+            case 4:
+                timerTask= new TimerTask() {
+                    @Override
+                    public void run() {
+                        if(isAddSpace){
+                            timerCallBack2.onCheck(isAddSpace);
+                            isAddSpace=false;
+                        }else{
+                            timerCallBack2.onCheck(isAddSpace);
+                        }
+                    }
+                };
+                timerTask2= new TimerTask() {
+                    @Override
+                    public void run() {
+                        isAddSpace=true;
+                    }
+                };
+                timer.schedule(timerTask, 1000, 1000);
+                timer.schedule(timerTask2, 60*1000, 60*1000);
                 break;
         }
 
 
+    }
+
+    public boolean addSpaceCheck(){
+        return isAddSpace;
     }
 
     private void checkCount(){

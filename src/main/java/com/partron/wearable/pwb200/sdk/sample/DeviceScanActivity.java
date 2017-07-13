@@ -139,6 +139,8 @@ public class DeviceScanActivity extends Activity implements BandScanCallback,Lis
                 viewHolder.deviceAddress.setText(deviceAddress);
             }
             return view;
+
+
         }
     }
 

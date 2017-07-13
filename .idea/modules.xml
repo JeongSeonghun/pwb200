@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/pwb200_sampleapp.iml" filepath="$PROJECT_DIR$/pwb200_sampleapp.iml" />
+      <module fileurl="file://$PROJECT_DIR$/PWB200.git.iml" filepath="$PROJECT_DIR$/PWB200.git.iml" />
     </modules>
   </component>
 </project>

@@ -10,6 +10,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.text.SpannableStringBuilder;
@@ -225,6 +226,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             exerciseInfo();
         }
     }
+    int testIdx=0;
 
     /*ch.h.nam 2017.01.09 {{*/
     private void batteryCheck() {
@@ -237,11 +239,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     hashMap.put("time", getCurrentTime());
                     hashMap.put("bat_lv", o);
                     batterys.add(hashMap);
+                    testAll.add(hashMap);
                     Log.d("battery Check :", "value i :" + String.valueOf(i) + "value o : " + String.valueOf(o));
+                    /*
                     if(isFinish){
                         isFinish=false;
                         new FileUtils(batterys).saveFile();
-                    }
+                    }*/
+                    String str= "idx: "+testIdx+", time: "+getCurrentTime()+", battery : "+String.valueOf(o);
+                    //addLog(str);
                 }
             });
 
@@ -265,8 +271,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
+    ArrayList testAll= new ArrayList();
     boolean isFinish= false;
     StringBuilder stringBuilder= new StringBuilder();
+    FileUtils fileUtils;
+    int testHRM=0;
     // BandExerciseListener Callback 운동 중 정보 확인
     private BandExerciseListener mBandExerciseListener = new BandExerciseListener() {
         @Override
@@ -300,26 +309,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
 
         @Override
-        public void exerciseRealTimeInfo(int step, int hrm, int altitude) {
+        public void exerciseRealTimeInfo(int step, final int hrm, int altitude) {
+            testHRM=hrm;
             //your code...
             if(isFirst){
                 isFirst=false;
 
-                /*
-                final CheckTimer checkTimer= new CheckTimer(times, 1000, 30, new CheckTimer.TimerCallBack() {
-                    @Override
-                    public void onComplete(ArrayList testArray) {
-                        Log.d("pwb test", "saveLog()");
-                        new FileUtils(testArray, "").saveFile();
-                    }
-
-                    @Override
-                    public ArrayList onCheck() {
-                        return times;
-                    }
-                });
-                */
-                CheckTimer checkTimer= new CheckTimer(batterys, new CheckTimer.TimerCallBack() {
+                fileUtils= new FileUtils();
+                CheckTimer checkTimer= new CheckTimer(new CheckTimer.TimerCallBack() {
                     @Override
                     public ArrayList onCheck() {
                         batteryCheck();
@@ -329,11 +326,39 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     @Override
                     public void onComplete(ArrayList testArray) {
                         isFinish= true;
+                        new Handler().postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                new FileUtils(testAll, true).saveFile();
+                            }
+                        },200);
+
                     }
                 });
                 checkTimer.startTimer();
+
+                CheckTimer checkTimer_heart= new CheckTimer(new CheckTimer.TimerCallBack2() {
+                    @Override
+                    public void onCheck(boolean addSpaceChk) {
+                        String addLogStr;
+                        HashMap hashMap= new HashMap();
+                        hashMap.put("time", getCurrentTime());
+                        hashMap.put("hrm", hrm);
+                        testAll.add(hashMap);
+                        if(addSpaceChk){
+                            hashMap.put("space", true);
+                            //addLogStr="idx:"+testIdx+", time: "+getCurrentTime()+" HRM:"+testHRM+"\r\n";
+                        }else{
+                            //addLogStr="idx:"+testIdx+", time: "+getCurrentTime()+" HRM:"+testHRM;
+                        }
+                        //addLog(addLogStr);
+                    }
+                });
+                //checkTimer_heart.startTimer();
                 batteryCheck();
             }
+
+
 
             currentTime= System.currentTimeMillis();
             times.add(currentTime);
@@ -366,18 +391,30 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     };
 
+    private void addLog(final String str){
+        fileUtils.appendLog(str);
+        testIdx++;
+    }
+
     private void exerciseStop(){
+        try{
+            new FileUtils(testAll, true).saveFile();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
         if(mClient!=null){
             mClient.getExerciseMode().stopExercise(new OnCompleteListener() {
                 @Override
                 public void onResult(int result, Object o) {
                     if(result==BandResultCode.SUCCESS){
                         Log.d("pwb test", "exercise Stop()");
+                        //new FileUtils(testAll, true);
                     }else{
 
                     }
                 }
             });
+
         }
     }
 

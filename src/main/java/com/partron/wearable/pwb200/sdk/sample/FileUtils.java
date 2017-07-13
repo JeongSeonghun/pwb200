@@ -3,9 +3,11 @@ package com.partron.wearable.pwb200.sdk.sample;
 import android.os.Environment;
 import android.util.Log;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
@@ -58,6 +60,22 @@ public class FileUtils {
         SAVEFILEPATH = todayDate(saveCase);
     }
 
+    public FileUtils(){
+        this.TAG ="";
+        saveCase=3;
+        STRSAVEPATH = Environment.getExternalStorageDirectory() + "/pwb200/";
+        SAVEFILEPATH = todayDate(saveCase);
+    }
+    boolean space;
+    public FileUtils(ArrayList list, boolean space){
+        this.TAG ="";
+        this.space=space;
+        this.list= list;
+        saveCase=4;
+        STRSAVEPATH = Environment.getExternalStorageDirectory() + "/pwb200/";
+        SAVEFILEPATH = todayDate(saveCase);
+    }
+
     private StringBuilder finalResultContents;
     public void saveFile(){
         //폴더 생성
@@ -69,11 +87,11 @@ public class FileUtils {
         //절대 경로
         Log.i(TAG, "" + getAbsolutePath(dir));
         Log.i(TAG, "" + getAbsolutePath(file));
-
+        String content;
         switch (saveCase){
             case 0:
                 //파일 쓰기, 리눅스 : \n, 윈도우 : \r\n
-                String content="all count : "+(list.size()-1);
+                content="all count : "+(list.size()-1);
                 finalResultContents = new StringBuilder(content);
 
                 finalResultContents.append("\r\nstart time: "+(((HashMap)list.get(0)).get("time"))
@@ -102,6 +120,46 @@ public class FileUtils {
                 finalResultContents.append("\r\n");
                 writeFile(file, String.valueOf(finalResultContents));
                 break;
+            case 4:
+                content="all count : "+(list.size()-1);
+                finalResultContents = new StringBuilder(content);
+
+                if(((HashMap)list.get(0)).containsKey("bat_lv"))
+                finalResultContents.append("\r\nstart time: "+(((HashMap)list.get(0)).get("time"))
+                        +", battery level: "+ (((HashMap)list.get(0)).get("bat_lv")));
+                for(int idx=1; idx<list.size(); idx++){
+                    HashMap hashMap= (HashMap)list.get(idx);
+                    if(hashMap.containsKey("bat_lv"))
+                        finalResultContents.append("\r\nidx: "+idx+"time: "+hashMap.get("time")+", battery lv: "+hashMap.get("bat_lv"));
+                    else if(hashMap.containsKey("hrm"))
+                        finalResultContents.append("\r\nidx: "+idx+"time: "+hashMap.get("time")+", HRM: "+hashMap.get("bat_lv"));
+
+                    if(hashMap.containsKey("space")&&space)
+                        finalResultContents.append("\r\n");
+                }
+
+                finalResultContents.append("\r\n");
+                writeFile(file, String.valueOf(finalResultContents));
+                break;
+        }
+    }
+
+    public void appendLog(String text){
+        //폴더 생성
+        dir = makeDirectory(STRSAVEPATH);
+        //파일 생성
+        file = makeFile(dir, (STRSAVEPATH + SAVEFILEPATH));
+
+        try {
+            // BufferedWriter for performance, true to set append to file flag
+            BufferedWriter buf = new BufferedWriter(new FileWriter(file,
+                    true));
+            buf.append(text);
+            buf.append("\r\n");
+            buf.close();
+            //Log.d("PWB-200 test", "log append");
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -166,6 +224,8 @@ public class FileUtils {
         sdf.setCalendar(Calendar.getInstance(Locale.getDefault()));
         String dateTime="";
         switch (caseNum){
+            case 0:
+            case 3:
             case 1:
                 dateTime = sdf.format(new Date()) + "_test_pwb.txt";
                 break;
